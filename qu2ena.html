@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Movies</title>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/semantic-ui/2.2.6/semantic.min.css">
+</head>
+
+<body style="font-family:microsoft yahei; color: #474a4d;">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="page-header" style="box-shadow: 3px;">
+                <h1 style="color: #27a;">豆瓣电影排行</h1>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>中文名</th>
+                        <th>英文名</th>
+                        <th>评分</th>
+                        <th>类型</th>
+                    </tr>
+                </thead>
+                <!-- <div class="ui segment" style="display: none;width: 100%; height: 100%;
+                position: absolute;top: 0;right: 0; z-index: 100;">
+                    <div class="ui active inverted dimmer">
+                      <div class="ui large text loader">Loading</div>
+                    </div>
+                    <p></p>
+                    <p></p>
+                    <p></p>
+                </div> -->
+
+                <tbody></tbody>
+            </table>
+            <nav>
+                <ul class="pagination pull-right">
+                   <!--  <li><a href="#">&laquo;</a></li>
+                    <li class="active"><span>1</span></li>
+                    <li style="cursor: pointer;"><span>2</span></li>
+                    <li style="cursor: pointer;"><span>3</span></li>
+                    <li style="cursor: pointer;"><span>4</span></li>
+                    <li style="cursor: pointer;"><span>5</span></li>
+                    <li><a href="#">&raquo;</a></li> -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div class="ui segment" style="display: none;width: 100%; height: 100%;
+                position: absolute;top: 0;right: 0; z-index: 100;">
+                    <div class="ui active inverted dimmer">
+                      <div class="ui large text loader">Loading</div>
+                    </div>
+                    <p></p>
+                    <p></p>
+                    <p></p>
+                </div>
+
+    <script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/semantic-ui/2.2.6/semantic.min.js"></script>
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+         var current = 1,
+            COUNT = 10,
+            MAXPAGE = 10,
+            STEP = 7
+
+        getList(0 ,COUNT)
+        pagenavi(1, MAXPAGE, STEP)
+
+        $('.pagination').on('click', 'li', function(){
+          var text = $(this).text()
+          if(text == '«' && current>1){
+            current--
+          }else if(text == '»' && current<MAXPAGE ){
+            current++
+          }else if(text == '«' && current<=1){
+            return;
+          }else if(text == '»' && current>=MAXPAGE){
+            return;
+          }else{
+            current = +text
+          }
+
+          pagenavi(current, MAXPAGE, STEP);
+          getList((current - 1) * 10, COUNT)
+          
+        })
+
+        function getList(start, count) {
+            $('.ui.segment').fadeIn(1000)
+            $.ajax({
+                    url: 'http://api.douban.com/v2/movie/top250',
+                    dataType: 'JSONP',
+                    data: {
+                        start,
+                        count
+                    },
+                })
+                .done(function(res) {
+                    $('tbody').empty()
+                    res.subjects.forEach(function(item, index) {
+                        var tr = $('<tr></tr>')
+                        tr.append(` <td>${start + index + 1}</td> 
+                                    <td>${item.title}</td> 
+                                    <td>${item.original_title}</td>
+                                    <td><div class="ui star rating" data-rating="${~~item.rating.average}" data-max-rating="10"></div></td>
+                                    <td>${item.genres.join()}</td> `)
+                        $('tbody').append(tr)
+                    })
+                    //当ajax请求成功后消失
+                    $('.ui.segment').fadeOut(1000)
+
+                })
+                .fail(function() {
+                    console.log("error");
+                })
+                .always(function() {
+                $('.rating').rating('disable')
+
+            })
+        }
+      
+        function pagenavi(current_page, total_page, page_step){
+          if(current_page == 0 || current_page > total_page){
+            return;
+          }
+
+          var _page;
+          var completion = (page_step - 1) / 2;
+          var _min = completion + 1;
+          var _max = total_page - completion;
+
+          if(current_page < _min ){
+            _page = _min;
+          }else if(current_page > _max){
+            _page = _max;
+          }else{
+            _page = current_page;
+          }
+
+          var block = '<li><a href="#">&laquo;</a></li>';
+          for(var i=_page-completion; i<=_page+completion; i++){
+             var attr;
+             if(i == current_page){
+              attr = 'class="active"';
+             }else{
+              attr = 'style="cursor: pointer;"';
+             }
+            block += '<li '+attr+'><span>'+i+'</span></li>';
+          }
+                    
+          block += '<li><a href="#">&raquo;</a></li>'
+          $('.pagination').html(block)       
+        }
+        
+    </script>
+    </body>
+    </html>
